@@ -41,8 +41,13 @@ function constant(graph, userSettings) {
         layoutNodes = typeof Object.create === 'function' ? Object.create(null) : {},
 
         ensureNodeInitialized = function (node) {
-            layoutNodes[node.id] = placeNodeCallback(node);
-            updateGraphRect(layoutNodes[node.id], graphRect);
+            //experimenting with this
+            if (!node.data.hidden) {
+                layoutNodes[node.id] = placeNodeCallback(node);
+                updateGraphRect(layoutNodes[node.id], graphRect);
+            } else {
+                
+            }
         },
 
         updateNodePositions = function () {

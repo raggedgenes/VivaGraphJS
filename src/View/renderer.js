@@ -38,7 +38,7 @@ var dragndrop = require('../Input/dragndrop.js');
  *
  *     // Layout algorithm to be used. The algorithm is expected to comply with defined
  *     // interface and is expected to be iterative. Renderer will use it then to calculate
- *     // grpaph's layout. For examples of the interface refer to Viva.Graph.Layout.forceDirected()
+ *     // graph's layout. For examples of the interface refer to Viva.Graph.Layout.forceDirected()
  *     layout : Viva.Graph.Layout.forceDirected(),
  *
  *     // Directs renderer to display links. Usually rendering links is the slowest part of this
@@ -67,8 +67,6 @@ function renderer(graph, settings) {
     rendererInitialized = false,
     updateCenterRequired = true,
 
-    currentStep = 0,
-    totalIterationsCount = 0,
     isStable = false,
     userInteraction = false,
     isPaused = false,
@@ -87,7 +85,7 @@ function renderer(graph, settings) {
      * Performs rendering of the graph.
      *
      * @param iterationsCount if specified renderer will run only given number of iterations
-     * and then stop. Otherwise graph rendering is performed infinitely.
+     * and then stop. Otherwise graph rendering is performed indefinitely.
      *
      * Note: if rendering stopped by used started dragging nodes or new nodes were added to the
      * graph renderer will give run more iterations to reflect changes.
@@ -140,6 +138,13 @@ function renderer(graph, settings) {
     },
 
     /**
+     * Returns current transformation matrix.
+     */
+    getTransform: function() {
+      return transform;
+    },
+
+    /**
      * Centers renderer at x,y graph's coordinates
      */
     moveTo: function(x, y) {
@@ -152,6 +157,13 @@ function renderer(graph, settings) {
      */
     getGraphics: function() {
       return graphics;
+    },
+    
+    /**
+     * Gets current layout.
+     */
+    getLayout: function() {
+      return layout;
     },
 
     /**
@@ -222,19 +234,20 @@ function renderer(graph, settings) {
 
   function renderIterations(iterationsCount) {
     if (animationTimer) {
-      totalIterationsCount += iterationsCount;
       return;
     }
 
-    if (iterationsCount) {
-      totalIterationsCount += iterationsCount;
-
+    if (iterationsCount !== undefined) {
       animationTimer = timer(function() {
+        iterationsCount -= 1;
+        if (iterationsCount < 0) {
+          var needMoreFrames = false;
+          return needMoreFrames;
+        }
+
         return onRenderFrame();
       }, FRAME_INTERVAL);
     } else {
-      currentStep = 0;
-      totalIterationsCount = 0;
       animationTimer = timer(onRenderFrame, FRAME_INTERVAL);
     }
   }
@@ -435,6 +448,7 @@ function renderer(graph, settings) {
         graphics.translateRel(offset.x, offset.y);
 
         renderGraph();
+        publicEvents.fire('drag', offset);
       });
     }
 
